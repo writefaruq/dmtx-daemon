@@ -1,0 +1,12 @@
+AC_INIT(configure.in)
+AM_INIT_AUTOMAKE(dmtxd, 0.1)
+AC_PREFIX_DEFAULT("/usr")
+AM_CONFIG_HEADER(config.h)
+
+CXXFLAGS=""
+AC_SUBST(CXXFLAGS)
+AC_PROG_CXX
+AM_PROG_CC_STDC
+AC_HEADER_STDC
+
+AC_OUTPUT([ Makefile src/Makefile ])
