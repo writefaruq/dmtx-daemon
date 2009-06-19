@@ -29,3 +29,4 @@ autom4te.cache
 dmtxd.dev
 src/Makefile
 src/Makefile.in
+src/dmtxd
