@@ -1,9 +1,13 @@
+#include <fcntl.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/inotify.h>
 
+#include "symbol.h"
+#include "utils.h"
 #include "inotify.h"
 
 #define EVENT_SIZE  ( sizeof (struct inotify_event) )
@@ -35,26 +39,28 @@ int inotify_watcher( )
     if ( event->len ) {
       if ( event->mask & IN_CREATE ) {
         if ( event->mask & IN_ISDIR ) {
-          printf( "The directory %s was created.\n", event->name );
+          log_message( "The directory %s was created.\n", event->name );
         }
         else {
-          printf( "The file %s was created.\n", event->name );
+          log_message( "The file %s was created.\n", event->name );
+          /* Jump to symbol decode code*/
+
         }
       }
       else if ( event->mask & IN_DELETE ) {
         if ( event->mask & IN_ISDIR ) {
-          printf( "The directory %s was deleted.\n", event->name );
+          log_message( "The directory %s was deleted.\n", event->name );
         }
         else {
-          printf( "The file %s was deleted.\n", event->name );
+          log_message( "The file %s was deleted.\n", event->name );
         }
       }
       else if ( event->mask & IN_MODIFY ) {
         if ( event->mask & IN_ISDIR ) {
-          printf( "The directory %s was modified.\n", event->name );
+          log_message( "The directory %s was modified.\n", event->name );
         }
         else {
-          printf( "The file %s was modified.\n", event->name );
+          log_message( "The file %s was modified.\n", event->name );
         }
       }
     }

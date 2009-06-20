@@ -28,27 +28,14 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <syslog.h>
 
+#include "utils.h"
 #include "inotify.h"
 
 #define RUNNING_DIR	"/tmp/dmtxdatadir"
 #define LOCK_FILE	"dmtxd.lock"
-#define LOG_FILE	"dmtxd.log"
 
-void log_message(filename, message)
-char *filename;
-char *message;
-{
-FILE *logfile;
-	logfile=fopen(filename,"a");
-	if(!logfile) return;
-	fprintf(logfile,"%s\n",message);
-	fclose(logfile);
-}
-
-void signal_handler(sig)
-int sig;
+void signal_handler(int sig)
 {
 	switch(sig) {
 	case SIGHUP:
