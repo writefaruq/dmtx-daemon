@@ -15,5 +15,6 @@
  *   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.              *
  ***************************************************************************/
 #define DMTX_DATADIR "/tmp/dmtxdatadir"
+#define DMTX_SYMBOL_OUTPUT "/tmp/dmtxdatadir/symbol.txt"
 
 int inotify_watcher(void);

@@ -141,8 +141,8 @@ int main(int argc, char *argv[])
 		/* run inotify */
 		err = inotify_watcher();
 		if (err < 0) {
-			/* FIXME: Don't use errno, it is a global system variable. Assign errno to a local variable first */
-			printf("inotify: %s (%d)", strerror(errno), errno);
+		        /* FIXME: Don't use errno, it is a global system variable. Assign errno to a local variable first */
+			printf("inotify: %s (%d)", strerror(err), err);
 		}
 		sleep(1);
 	}

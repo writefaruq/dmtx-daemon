@@ -1,4 +1,19 @@
-/* FIXME: Missing license */
+/***************************************************************************
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.              *
+ ***************************************************************************/
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -17,16 +32,19 @@
 
 int inotify_watcher(void)
 {
-	int length, i = 0;
+	int err, length, i = 0;
 	int fd;
 	int wd;
 	char buffer[BUF_LEN];
+	char *infile, *outfile = DMTX_SYMBOL_OUTPUT;
 
 	fd = inotify_init();
 
 	if (fd < 0) {
 		/* FIXME: Missing return? */
+		err = errno;
 		perror("inotify_init");
+		return err;
 	}
 
 	wd = inotify_add_watch(fd, DMTX_DATADIR, IN_MODIFY | IN_CREATE | IN_DELETE);
@@ -34,30 +52,42 @@ int inotify_watcher(void)
 
 	if (length < 0) {
 		/* FIXME: Missing return? */
+		err = errno;
 		perror("read");
+		return err;
 	}
 
 	/* FIXME: Please avoid nested if */
 	while (i < length) {
 		struct inotify_event *event = (struct inotify_event *) &buffer[i];
 		if (event->len) {
-			if (event->mask & IN_CREATE) {
-				if (event->mask & IN_ISDIR)
-					log_message("The directory %s was created.\n", event->name);
-				else
-					log_message("The file %s was created.\n", event->name);
+		        switch (event->mask) {
+		                case IN_CREATE:
+		                if (event->mask & IN_ISDIR) {
+		                        log_message("The directory %s was created.\n", event->name);
+		                } else {
+		                        log_message("The file %s was created.\n", event->name);
 					/* Jump to symbol decode code*/
-			} else if (event->mask & IN_DELETE) {
-				if (event->mask & IN_ISDIR)
+					sprintf(infile, "%s", event->name);
+					dmtx_decode_symbol(infile, outfile);
+		                }
+		                break;
+		                case IN_DELETE:
+		                if (event->mask & IN_ISDIR)
 					log_message("The directory %s was deleted.\n", event->name);
 				else
 					log_message("The file %s was deleted.\n", event->name);
-			} else if (event->mask & IN_MODIFY) {
-				if (event->mask & IN_ISDIR)
+		                break;
+                                case IN_MODIFY:
+                                if (event->mask & IN_ISDIR)
 					log_message("The directory %s was modified.\n", event->name);
 				else
 					log_message("The file %s was modified.\n", event->name);
-			}
+		                break;
+		                default:
+		                log_message("Event %s is not interesting to us.\n", event->name);
+
+		        }
 		}
 		i += EVENT_SIZE + event->len;
 	}
@@ -66,5 +96,5 @@ int inotify_watcher(void)
 	(void) close(fd);
 
 	/* FIXME: exit is not correct */
-	exit(EXIT_SUCCESS);
+	return 0;
 }
