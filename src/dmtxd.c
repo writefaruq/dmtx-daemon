@@ -37,11 +37,11 @@
 
 void signal_handler(int sig)
 {
-	switch(sig) {
-	case SIGHUP:
+	switch (sig) {
+		case SIGHUP:
 		log_message(LOG_FILE,"hangup signal catched");
 		break;
-	case SIGTERM:
+		case SIGTERM:
 		log_message(LOG_FILE,"terminate signal catched");
 		exit(0);
 		break;
@@ -50,34 +50,37 @@ void signal_handler(int sig)
 
 void daemonize()
 {
-        int i,lfp,ret;
-        char str[10];
+	int i, lfp, ret;
+	char str[10];
 
-	if(getppid()==1)
-                return; /* already a daemon */
-	ret=fork();
-	if (ret<0)
-                exit(EXIT_FAILURE); /* fork error */
-	if (ret>0)
-                exit(EXIT_SUCCESS); /* parent exits */
+	if (getppid() == 1)
+		return; /* already a daemon */
+
+	ret = fork();
+	if (ret < 0)
+		exit(EXIT_FAILURE); /* fork error */
+
+	if (ret > 0)
+		exit(EXIT_SUCCESS); /* parent exits */
 
 	/* child (daemon) continues */
 	/* obtain a new process group */
 	setsid();
 
 	/* close all descriptors */
-	for (i=getdtablesize();i>=0;--i)
-                close(i);
+	for (i = getdtablesize(); i>=0; --i)
+		close(i);
 
 	/* handle standart I/O */
-	ret=open("/dev/null",O_RDWR);
+	ret = open("/dev/null",O_RDWR);
 	ret = dup(i);
 	ret = dup(i);
 
-	if (ret<0)
-                exit(EXIT_FAILURE);
-	if (ret>0)
-                exit(EXIT_SUCCESS);
+	if (ret < 0)
+		exit(EXIT_FAILURE);
+
+	if (ret > 0)
+		exit(EXIT_SUCCESS);
 
 
 	/* set newly created file permissions */
@@ -85,46 +88,47 @@ void daemonize()
 
 	/* change running directory */
 	ret = chdir(RUNNING_DIR);
-	if (ret<0)
-                exit(EXIT_FAILURE);
-	if (ret>0)
-                exit(EXIT_SUCCESS);
+	if (ret < 0)
+		exit(EXIT_FAILURE);
 
+	if (ret > 0)
+		exit(EXIT_SUCCESS);
 
-	lfp=open(LOCK_FILE,O_RDWR|O_CREAT,0640);
+	lfp = open(LOCK_FILE,O_RDWR | O_CREAT,0640);
 
 	/* can not open */
-	if (lfp<0)
-                exit(EXIT_FAILURE);
-	 /* can not lock */
-	if (lockf(lfp,F_TLOCK,0)<0)
-                exit(EXIT_SUCCESS);
+	if (lfp < 0)
+		exit(EXIT_FAILURE);
+
+	/* can not lock */
+	if (lockf(lfp, F_TLOCK,0) < 0)
+		exit(EXIT_SUCCESS);
 
 	/* first instance continues */
-	sprintf(str,"%d\n",getpid());
+	sprintf(str,"%d\n", getpid());
 
 	/* record pid to lockfile */
-	ret = write(lfp,str,strlen(str));
+	ret = write(lfp, str, strlen(str));
 
-        if (ret<0)
-                exit(EXIT_FAILURE);
-	if (ret>0)
-                exit(EXIT_SUCCESS);
+	if (ret < 0)
+		exit(EXIT_FAILURE);
 
+	if (ret > 0)
+		exit(EXIT_SUCCESS);
 
 	/* ignore child */
-	signal(SIGCHLD,SIG_IGN);
+	signal(SIGCHLD, SIG_IGN);
 
 	/* ignore tty signals */
-	signal(SIGTSTP,SIG_IGN);
-	signal(SIGTTOU,SIG_IGN);
-	signal(SIGTTIN,SIG_IGN);
+	signal(SIGTSTP, SIG_IGN);
+	signal(SIGTTOU, SIG_IGN);
+	signal(SIGTTIN, SIG_IGN);
 
-        /* catch hangup signal */
-	signal(SIGHUP,signal_handler);
+	/* catch hangup signal */
+	signal(SIGHUP, signal_handler);
 
 	/* catch kill signal */
-	signal(SIGTERM,signal_handler);
+	signal(SIGTERM, signal_handler);
 }
 
 int main(int argc, char *argv[])
@@ -132,16 +136,18 @@ int main(int argc, char *argv[])
 	int err;
 	daemonize();
 
-	while(1){
-                /* run inotify */
-                err = inotify_watcher();
-                if (err < 0) {
-                        printf("inotify: %s (%d)", strerror(errno), errno);
-                }
-                sleep(1);
+	/* FIXME: Busy loop? Suggestion: is it possible use glib mainloop? */
+	while (1) {
+		/* run inotify */
+		err = inotify_watcher();
+		if (err < 0) {
+			/* FIXME: Don't use errno, it is a global system variable. Assign errno to a local variable first */
+			printf("inotify: %s (%d)", strerror(errno), errno);
+		}
+		sleep(1);
 	}
 
-        printf("\nExiting\n");
+	printf("\nExiting\n");
 
 	exit(EXIT_SUCCESS);
 

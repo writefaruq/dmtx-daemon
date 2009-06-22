@@ -16,4 +16,4 @@
  ***************************************************************************/
 #define DMTX_DATADIR "/tmp/dmtxdatadir"
 
-int inotify_watcher();
+int inotify_watcher(void);
