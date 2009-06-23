@@ -1,4 +1,4 @@
-/***************************************************************************
+/*
 libdmtx - Data Matrix Encoding/Decoding Library
 
 Copyright (C) 2008, 2009 Mike Laughton

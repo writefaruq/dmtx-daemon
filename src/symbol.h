@@ -1,4 +1,5 @@
-/* Bluez-Dmtx Plugin Symbol interface
+/***************************************************************************
+Bluez-Dmtx Plugin Symbol interface
 Copyright (C) 2009, M Omar Faruque Sarker
 
 libdmtx - Data Matrix Encoding/Decoding Library
@@ -101,7 +102,7 @@ typedef struct {
    int verbose;
 } EncodeOptions;
 
-void dmtx_decode_symbol(char *infile, char *outfile);
+int symbol_decode(char *infile, char *outfile);
 
 void dmtx_encode_symbol(char *infile, char *outfile);
 

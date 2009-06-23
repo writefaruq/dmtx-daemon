@@ -15,6 +15,7 @@
  *   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.              *
  ***************************************************************************/
 
+#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -30,13 +31,24 @@
 #define EVENT_SIZE  ( sizeof (struct inotify_event) )
 #define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
 
+static void handle_file_creation(char *infile)
+{
+        int img_count = 0;
+        char *outfile = DMTX_SYMBOL_OUTPUT;
+        img_count = symbol_decode(infile, outfile);
+        log_message(" %d symbol decoded \n", img_count);
+        if ( img_count == 1) { /* assuming successful decode */
+                dmtxplugin_gdbus_create_device(outfile);
+        }
+}
+
 int inotify_watcher(void)
 {
-	int err, length, i = 0;
+	int err, length, i = 0, j = 0;
 	int fd;
 	int wd;
 	char buffer[BUF_LEN];
-	char *infile, *outfile = DMTX_SYMBOL_OUTPUT;
+	char *infile;
 
 	fd = inotify_init();
 
@@ -69,7 +81,7 @@ int inotify_watcher(void)
 		                        log_message("The file %s was created.\n", event->name);
 					/* Jump to symbol decode code*/
 					sprintf(infile, "%s", event->name);
-					dmtx_decode_symbol(infile, outfile);
+					handle_file_creation(infile);
 		                }
 		                break;
 		                case IN_DELETE:
