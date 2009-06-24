@@ -14,4 +14,14 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.              *
  ***************************************************************************/
+#ifndef __DMTXPLUGIN_GDBUS_H__
+#define __DMTXPLUGIN_GDBUS_H__
+
+#include <glib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
  void dmtxplugin_gdbus_create_device(char *outfile);
+
+ #endif

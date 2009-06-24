@@ -17,13 +17,12 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-Contact: mike@dragonflylogic.com
 */
 
 /* $Id: dmtxread.h 124 2008-04-13 01:38:03Z mblaughton $ */
 
-#ifndef __DMTXUTIL_H__
-#define __DMTXUTIL_H__
+#ifndef __DMTXUTILS_H__
+#define __DMTXUTILS_H__
 
 //#ifdef HAVE_CONFIG_H
 //#include "../../config.h"
