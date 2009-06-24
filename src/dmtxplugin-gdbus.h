@@ -22,6 +22,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <gdbus.h>
+
+#include "utils.h"
+
  void dmtxplugin_gdbus_create_device(char *outfile);
 
  #endif

@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!-- Header-->
-<bluez-wizard version='0x01'>
+<bluez-dmtx version='0x01'>
 
 <!-- Bluetooth Address (MAC)-->
 <bdaddr>
-<str>00:12:40:3A:1D:E5</str>
+<text value="00:12:40:3A:1D:E5" />
 </bdaddr>
 
 <!--User-freindly name -->
 <name>
-<str>faruq</str>
+<text value="faruq" />
 </name>
 
 <!-- Link Key or PIN for paring-->
 <linkkey>
-<str>1234</str>
+<text value="1234" />
 </linkkey>
 
 <!--SDP Records -->
