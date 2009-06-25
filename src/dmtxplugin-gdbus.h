@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <gdbus.h>
+#include "../gdbus/gdbus.h"
 
 #include "utils.h"
 

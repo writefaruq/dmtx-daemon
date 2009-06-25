@@ -1,9 +1,8 @@
 #!/bin/sh
-echo "Running aclocal"
-aclocal
-echo "Running automake"
-automake --add-missing
-echo "Running autoconf"
+
+aclocal && \
+autoheader && \
+libtoolize --automake --copy --force && \
+automake --add-missing --copy && \
 autoconf
-echo "Running configure"
 ./configure

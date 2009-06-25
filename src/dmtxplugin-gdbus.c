@@ -22,6 +22,8 @@ struct context_data {
 	char *bdaddr;
 };
 
+static DBusConnection *conn = NULL;
+
 static void element_start(GMarkupParseContext *context,
 		const gchar *element_name, const gchar **attribute_names,
 		const gchar **attribute_values, gpointer user_data, GError **err)
@@ -35,7 +37,7 @@ static void element_start(GMarkupParseContext *context,
 		int i;
 		for (i = 0; attribute_names[i]; i++) {
 			if (!strcmp(attribute_names[i], "value")) {
-				ctx_data->addr = g_strdup(attribute_values[i] + 2);
+				ctx_data->bdaddr = g_strdup(attribute_values[i] + 2);
 				ctx_data->found = TRUE;
 			}
 		}
@@ -58,7 +60,7 @@ static char *dmtxplugin_xml_parse_bdaddr(const char *data)
 
 	if (g_markup_parse_context_parse(ctx, data, size, NULL) == FALSE) {
 		g_markup_parse_context_free(ctx);
-		g_free(ctx_data.id);
+		g_free(ctx_data.bdaddr);
 		return NULL;
 	}
 
@@ -70,11 +72,15 @@ static char *dmtxplugin_xml_parse_bdaddr(const char *data)
 static char *gdbus_device_create(const char *adapter, char *bdaddr)
 {
 	DBusMessage *message, *reply, *adapter_reply;
-	DBusMessageIter reply_iter;
+	DBusMessageIter iter, reply_iter;
 
 	char *object_path = NULL;;
 
 	adapter_reply = NULL;
+
+	conn = g_dbus_setup_bus(DBUS_BUS_SYSTEM, NULL, NULL);
+	if (conn == NULL)
+		return NULL;
 
 	if (adapter == NULL) {
 		message = dbus_message_new_method_call("org.bluez", "/",
@@ -87,7 +93,7 @@ static char *gdbus_device_create(const char *adapter, char *bdaddr)
 		dbus_message_unref(message);
 
 		if (dbus_message_get_args(adapter_reply, NULL, DBUS_TYPE_OBJECT_PATH, &adapter, DBUS_TYPE_INVALID) == FALSE)
-			return;
+			return NULL;
 	}
 
 	if (adapter_reply != NULL)
@@ -141,6 +147,8 @@ void dmtxplugin_gdbus_create_device(char *outfile)
 
         device_path = gdbus_device_create(NULL, bdaddr);
         log_message("Device created on path: %s \n ", device_path);
+
+        dbus_connection_unref(conn);
 
 }
 

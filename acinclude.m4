@@ -22,16 +22,6 @@ AC_DEFUN([AC_PATH_DBUS], [
 	AC_SUBST(DBUS_LIBS)
 ])
 
-AC_DEFUN([AC_PATH_GDBUS], [
-	PKG_CHECK_MODULES(GDBUS, dbus-1 >= 1.0, dummy=yes,
-				AC_MSG_ERROR(GD-Bus library is required))
-	AC_CHECK_LIB(gdbus-1, gdbus_watch_get_unix_fd, dummy=yes,
-		AC_DEFINE(NEED_GDBUS_WATCH_GET_UNIX_FD, 1,
-			[Define to 1 if you need the gdbus_watch_get_unix_fd() function.]))
-	AC_SUBST(GDBUS_CFLAGS)
-	AC_SUBST(GDBUS_LIBS)
-])
-
 AC_DEFUN([AC_PATH_GLIB], [
 	PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.14, dummy=yes,
 				AC_MSG_ERROR(GLib library version 2.14 or later is required))
@@ -44,4 +34,9 @@ AC_DEFUN([AC_PATH_BLUEZ], [
 				AC_MSG_ERROR(Bluez library version 4.40 or later is required))
 	AC_SUBST(BLUEZ_CFLAGS)
 	AC_SUBST(BLUEZ_LIBS)
+])
+
+AC_DEFUN([AC_PATH_GDBUS], [
+        AC_SUBST([GDBUS_CFLAGS], ['-I$(top_srcdir)/gdbus'])
+        AC_SUBST([GDBUS_LIBS], ['$(top_builddir)/gdbus/libgdbus.la'])
 ])
