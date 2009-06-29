@@ -33,7 +33,7 @@
 #include "inotify.h"
 
 #define RUNNING_DIR	"/tmp/dmtxdatadir"
-#define LOCK_FILE	"dmtxd.lock"
+#define LOCK_FILE	"/tmp/dmtxdatadir/dmtxd.lock"
 
 void signal_handler(int sig)
 {
@@ -51,50 +51,37 @@ void signal_handler(int sig)
 void daemonize()
 {
 	int i, lfp, ret;
+	pid_t pid, sid;
 	char str[10];
 
 	if (getppid() == 1)
 		return; /* already a daemon */
 
-	ret = fork();
-	if (ret < 0)
+	pid = fork();
+	if (pid < 0) {
+	        printf("testing dmtxd pid: %d \n", pid);
 		exit(EXIT_FAILURE); /* fork error */
+	}
 
-	if (ret > 0)
+	if (pid > 0) {
+	        /* printf("testing dmtxd pid: %d \n", pid); */
 		exit(EXIT_SUCCESS); /* parent exits */
+	}
 
+        umask(0);
 	/* child (daemon) continues */
 	/* obtain a new process group */
-	setsid();
-
-	/* close all descriptors */
-	for (i = getdtablesize(); i>=0; --i)
-		close(i);
-
-	/* handle standart I/O */
-	ret = open("/dev/null",O_RDWR);
-	ret = dup(i);
-	ret = dup(i);
-
-	if (ret < 0)
+	sid = setsid();
+	if (sid < 0) {
+	        printf("testing dmtxd sid: %d \n", sid);
 		exit(EXIT_FAILURE);
+	}
 
-	if (ret > 0)
-		exit(EXIT_SUCCESS);
+	if (sid > 0) {
+	         printf("testing dmtxd sid: %d \n", sid);
+	}
 
-
-	/* set newly created file permissions */
-	umask(027);
-
-	/* change running directory */
-	ret = chdir(RUNNING_DIR);
-	if (ret < 0)
-		exit(EXIT_FAILURE);
-
-	if (ret > 0)
-		exit(EXIT_SUCCESS);
-
-	lfp = open(LOCK_FILE,O_RDWR | O_CREAT,0640);
+        lfp = open(LOCK_FILE,O_RDWR | O_CREAT,0640);
 
 	/* can not open */
 	if (lfp < 0)
@@ -102,7 +89,7 @@ void daemonize()
 
 	/* can not lock */
 	if (lockf(lfp, F_TLOCK,0) < 0)
-		exit(EXIT_SUCCESS);
+		exit(EXIT_FAILURE);
 
 	/* first instance continues */
 	sprintf(str,"%d\n", getpid());
@@ -113,8 +100,29 @@ void daemonize()
 	if (ret < 0)
 		exit(EXIT_FAILURE);
 
-	if (ret > 0)
-		exit(EXIT_SUCCESS);
+	/* close all descriptors */
+//	for (i = getdtablesize(); i>=0; --i)
+//		close(i);
+
+	/* handle standart I/O */
+//	ret = open("/dev/null",O_RDWR);
+//	ret = dup(i);
+//	ret = dup(i);
+//
+//	if (ret < 0)
+//		exit(EXIT_FAILURE);
+
+         printf("testing dmtxd handle IO: %d \n", ret);
+
+	/* set newly created file permissions */
+	umask(027);
+
+	/* change running directory */
+	ret = chdir(RUNNING_DIR);
+	if (ret < 0)
+		exit(EXIT_FAILURE);
+
+        log_message(LOG_FILE, "testing dmtxd rundir: OK  \n");
 
 	/* ignore child */
 	signal(SIGCHLD, SIG_IGN);
@@ -135,19 +143,20 @@ int main(int argc, char *argv[])
 {
 	int err;
 	daemonize();
-
+        while (1)
+                sleep(1);
 	/* FIXME: Busy loop? Suggestion: is it possible use glib mainloop? */
 	while (1) {
 		/* run inotify */
 		err = inotify_watcher();
 		if (err < 0) {
 		        /* FIXME: Don't use errno, it is a global system variable. Assign errno to a local variable first */
-			printf("inotify: %s (%d)", strerror(err), err);
+			log_message(LOG_FILE, "inotify: ");
 		}
 		sleep(1);
 	}
 
-	printf("\nExiting\n");
+	log_message(LOG_FILE, "\nExiting daemon\n");
 
 	exit(EXIT_SUCCESS);
 

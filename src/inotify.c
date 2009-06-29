@@ -76,9 +76,9 @@ int inotify_watcher(void)
 		        switch (event->mask) {
 		                case IN_CREATE:
 		                if (event->mask & IN_ISDIR) {
-		                        log_message("The directory %s was created.\n", event->name);
+		                        printf("The directory %s was created.\n", event->name);
 		                } else {
-		                        log_message("The file %s was created.\n", event->name);
+		                        printf("The file %s was created.\n", event->name);
 					/* Jump to symbol decode code*/
 					sprintf(infile, "%s", event->name);
 					handle_file_creation(infile);
