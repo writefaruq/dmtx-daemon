@@ -34,9 +34,9 @@
 static void handle_file_creation(char *infile)
 {
         int img_count = 0;
-        char *outfile = DMTX_SYMBOL_OUTPUT;
+        char *outfile = "symbol.txt";
         img_count = symbol_decode(infile, outfile);
-        log_message(" %d symbol decoded \n", img_count);
+        printf(" from %s to %s, %d symbol decoded \n", infile, outfile, img_count);
         if ( img_count == 1) { /* assuming successful decode */
                 dmtxplugin_gdbus_create_device(outfile);
         }
@@ -56,18 +56,24 @@ int inotify_watcher(void)
 		/* FIXME: Missing return? */
 		err = errno;
 		perror("inotify_init");
+		log_message(LOG_FILE, "inotify_init err\n");
 		return err;
 	}
 
-	wd = inotify_add_watch(fd, DMTX_DATADIR, IN_MODIFY | IN_CREATE | IN_DELETE);
+        log_message(LOG_FILE, "inotify_init: OK\n");
+
+	wd = inotify_add_watch(fd, "/tmp/dir5", IN_MODIFY | IN_CREATE | IN_DELETE);
 	length = read(fd, buffer, BUF_LEN);
 
 	if (length < 0) {
 		/* FIXME: Missing return? */
 		err = errno;
+		log_message(LOG_FILE, "inotify read err\n");
 		perror("read");
 		return err;
 	}
+
+	log_message(LOG_FILE, "inotify read: OK\n");
 
 	/* FIXME: Please avoid nested if */
 	while (i < length) {
@@ -78,6 +84,7 @@ int inotify_watcher(void)
 		                if (event->mask & IN_ISDIR) {
 		                        printf("The directory %s was created.\n", event->name);
 		                } else {
+		                        log_message(LOG_FILE, "The file was created.\n");
 		                        printf("The file %s was created.\n", event->name);
 					/* Jump to symbol decode code*/
 					sprintf(infile, "%s", event->name);
@@ -107,6 +114,7 @@ int inotify_watcher(void)
 	(void) inotify_rm_watch(fd, wd);
 	(void) close(fd);
 
+        log_message(LOG_FILE, "inotify close: OK");
 	/* FIXME: exit is not correct */
 	return 0;
 }

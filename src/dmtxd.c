@@ -32,8 +32,8 @@
 #include "utils.h"
 #include "inotify.h"
 
-#define RUNNING_DIR	"/tmp/dmtxdatadir"
-#define LOCK_FILE	"/tmp/dmtxdatadir/dmtxd.lock"
+#define RUNNING_DIR	"dmtxdatadir"
+#define LOCK_FILE	"dmtxdatadir/dmtxd.lock"
 
 void signal_handler(int sig)
 {
@@ -143,16 +143,23 @@ int main(int argc, char *argv[])
 {
 	int err;
 	daemonize();
-        while (1)
-                sleep(1);
+        err = inotify_watcher();
+        printf("err: %d\n", err);
+        if (err < 0) {
+                /* FIXME: Don't use errno, it is a global system variable. Assign errno to a local variable first */
+                log_message(LOG_FILE, "inotify: ");
+        }
+
+        log_message(LOG_FILE, "inotify: after");
+
 	/* FIXME: Busy loop? Suggestion: is it possible use glib mainloop? */
 	while (1) {
 		/* run inotify */
-		err = inotify_watcher();
-		if (err < 0) {
-		        /* FIXME: Don't use errno, it is a global system variable. Assign errno to a local variable first */
-			log_message(LOG_FILE, "inotify: ");
-		}
+//		err = inotify_watcher();
+//		if (err < 0) {
+//		        /* FIXME: Don't use errno, it is a global system variable. Assign errno to a local variable first */
+//			log_message(LOG_FILE, "inotify: ");
+//		}
 		sleep(1);
 	}
 
