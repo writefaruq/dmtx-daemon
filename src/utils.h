@@ -24,6 +24,6 @@
 #include <stdio.h>
 #include <fcntl.h>
 
-#define LOG_FILE        "dmtxd.log"
+#define LOG_FILE        "/tmp/dmtxdatadir/dmtxd.log"
 
 void log_message(char *filename, char *message);

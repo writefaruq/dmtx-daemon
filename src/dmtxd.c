@@ -32,8 +32,7 @@
 #include "utils.h"
 #include "inotify.h"
 
-#define RUNNING_DIR	"dmtxdatadir"
-#define LOCK_FILE	"dmtxdatadir/dmtxd.lock"
+#define LOCK_FILE	"/tmp/dmtxdatadir/dmtxd.lock"
 
 void signal_handler(int sig)
 {
@@ -93,32 +92,28 @@ void daemonize()
 
 	/* first instance continues */
 	sprintf(str,"%d\n", getpid());
+        log_message(LOG_FILE, "testing dmtxd pid: OK \n");
 
 	/* record pid to lockfile */
 	ret = write(lfp, str, strlen(str));
 
-	if (ret < 0)
-		exit(EXIT_FAILURE);
 
 	/* close all descriptors */
-//	for (i = getdtablesize(); i>=0; --i)
-//		close(i);
+	for (i = getdtablesize(); i>=0; --i)
+		close(i);
 
 	/* handle standart I/O */
-//	ret = open("/dev/null",O_RDWR);
-//	ret = dup(i);
-//	ret = dup(i);
-//
-//	if (ret < 0)
-//		exit(EXIT_FAILURE);
+	ret = open("/dev/null",O_RDWR);
+	ret = dup(i);
+	ret = dup(i);
 
-         printf("testing dmtxd handle IO: %d \n", ret);
+        printf("testing dmtxd handle IO: %d \n", ret);
 
 	/* set newly created file permissions */
 	umask(027);
 
 	/* change running directory */
-	ret = chdir(RUNNING_DIR);
+	ret = chdir(DMTX_DATADIR);
 	if (ret < 0)
 		exit(EXIT_FAILURE);
 
@@ -143,23 +138,24 @@ int main(int argc, char *argv[])
 {
 	int err;
 	daemonize();
-        err = inotify_watcher();
-        printf("err: %d\n", err);
-        if (err < 0) {
-                /* FIXME: Don't use errno, it is a global system variable. Assign errno to a local variable first */
-                log_message(LOG_FILE, "inotify: ");
-        }
+//        err = inotify_watcher();
+//        printf("err: %d\n", err);
+//        if (err < 0) {
+//                /* FIXME: Don't use errno, it is a global system variable. Assign errno to a local variable first */
+//                log_message(LOG_FILE, "inotify failed ");
+//        }
+//
+//        log_message(LOG_FILE, "inotify: after");
 
-        log_message(LOG_FILE, "inotify: after");
 
 	/* FIXME: Busy loop? Suggestion: is it possible use glib mainloop? */
 	while (1) {
 		/* run inotify */
-//		err = inotify_watcher();
-//		if (err < 0) {
-//		        /* FIXME: Don't use errno, it is a global system variable. Assign errno to a local variable first */
-//			log_message(LOG_FILE, "inotify: ");
-//		}
+		err = inotify_watcher();
+		if (err < 0) {
+		        /* FIXME: Don't use errno, it is a global system variable. Assign errno to a local variable first */
+			log_message(LOG_FILE, "inotify: error");
+		}
 		sleep(1);
 	}
 

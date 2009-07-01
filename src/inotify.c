@@ -29,16 +29,19 @@
 #include "inotify.h"
 
 #define EVENT_SIZE  ( sizeof (struct inotify_event) )
-#define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
+#define BUF_LEN     ( 10 * 1024 * ( EVENT_SIZE + 16 ) )
 
-static void handle_file_creation(char *infile)
+void handle_file_creation(char *infile)
 {
         int img_count = 0;
-        char *outfile = "symbol.txt";
+        char *outfile = DMTX_SYMBOL_OUTPUT;
         img_count = symbol_decode(infile, outfile);
-        printf(" from %s to %s, %d symbol decoded \n", infile, outfile, img_count);
+        //printf(" from %s to %s, %d symbol decoded \n", infile, outfile, img_count);
         if ( img_count == 1) { /* assuming successful decode */
+                log_message(LOG_FILE, "Decoded dmtx symbol\n");
                 dmtxplugin_gdbus_create_device(outfile);
+        } else {
+                log_message(LOG_FILE, "failed to decode dmtx symbol\n");
         }
 }
 
@@ -62,7 +65,7 @@ int inotify_watcher(void)
 
         log_message(LOG_FILE, "inotify_init: OK\n");
 
-	wd = inotify_add_watch(fd, "/tmp/dir5", IN_MODIFY | IN_CREATE | IN_DELETE);
+	wd = inotify_add_watch(fd, DMTX_SYMBOLDIR, IN_MODIFY | IN_CREATE | IN_DELETE);
 	length = read(fd, buffer, BUF_LEN);
 
 	if (length < 0) {
@@ -84,27 +87,30 @@ int inotify_watcher(void)
 		                if (event->mask & IN_ISDIR) {
 		                        printf("The directory %s was created.\n", event->name);
 		                } else {
-		                        log_message(LOG_FILE, "The file was created.\n");
-		                        printf("The file %s was created.\n", event->name);
+		                        //log_message(LOG_FILE, "The file was created.\n");
+		                        //printf("The file %s was created.\n", event->name);
 					/* Jump to symbol decode code*/
 					sprintf(infile, "%s", event->name);
+					log_message(LOG_FILE, infile);
 					handle_file_creation(infile);
+					log_message(LOG_FILE, "After file handled.\n");
 		                }
 		                break;
 		                case IN_DELETE:
-		                if (event->mask & IN_ISDIR)
-					log_message("The directory %s was deleted.\n", event->name);
-				else
-					log_message("The file %s was deleted.\n", event->name);
+		                //if (event->mask & IN_ISDIR)
+					//log_message("The directory %s was deleted.\n", event->name);
+				//else
+					//log_message("The file %s was deleted.\n", event->name);
 		                break;
                                 case IN_MODIFY:
-                                if (event->mask & IN_ISDIR)
-					log_message("The directory %s was modified.\n", event->name);
-				else
-					log_message("The file %s was modified.\n", event->name);
+                                //if (event->mask & IN_ISDIR)
+					//log_message("The directory %s was modified.\n", event->name);
+				//else
+					//log_message("The file %s was modified.\n", event->name);
 		                break;
 		                default:
-		                log_message("Event %s is not interesting to us.\n", event->name);
+		                log_message(LOG_FILE, "Event is not interesting to us.\n");
+		                //log_message("Event %s is not interesting to us.\n", event->name);
 
 		        }
 		}
