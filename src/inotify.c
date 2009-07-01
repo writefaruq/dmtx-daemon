@@ -15,21 +15,25 @@
  *   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.              *
  ***************************************************************************/
 
-#include <string.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <sys/types.h>
-#include <sys/inotify.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <sys/select.h>
+
+#define ALL_MASK 0xffffffff
 
 #include "symbol.h"
 #include "utils.h"
 #include "inotify.h"
-
-#define EVENT_SIZE  ( sizeof (struct inotify_event) )
-#define BUF_LEN     ( 10 * 1024 * ( EVENT_SIZE + 16 ) )
+#include "inotify-eventqueue.h"
+#include "inotify-utils.h"
+#include "dmtxd.h"
 
 void handle_file_creation(char *infile)
 {
@@ -47,80 +51,40 @@ void handle_file_creation(char *infile)
 
 int inotify_watcher(void)
 {
-	int err, length, i = 0, j = 0;
-	int fd;
-	int wd;
-	char buffer[BUF_LEN];
-	char *infile;
+	/* This is the file descriptor for the inotify device */
+	int inotify_fd;
 
-	fd = inotify_init();
-
-	if (fd < 0) {
-		/* FIXME: Missing return? */
-		err = errno;
-		perror("inotify_init");
-		log_message(LOG_FILE, "inotify_init err\n");
-		return err;
+	/* First we open the inotify dev entry */
+	inotify_fd = open_inotify_dev();
+	if (inotify_fd < 0)
+	{
+		return 0;
 	}
 
-        log_message(LOG_FILE, "inotify_init: OK\n");
 
-	wd = inotify_add_watch(fd, DMTX_SYMBOLDIR, IN_MODIFY | IN_CREATE | IN_DELETE);
-	length = read(fd, buffer, BUF_LEN);
 
-	if (length < 0) {
-		/* FIXME: Missing return? */
-		err = errno;
-		log_message(LOG_FILE, "inotify read err\n");
-		perror("read");
-		return err;
-	}
+	/* We will need a place to enqueue inotify events,
+           this is needed because if you do not read events
+	   fast enough, you will miss them.
+	*/
+	queue_t q;
+	q = queue_create (128);
 
-	log_message(LOG_FILE, "inotify read: OK\n");
 
-	/* FIXME: Please avoid nested if */
-	while (i < length) {
-		struct inotify_event *event = (struct inotify_event *) &buffer[i];
-		if (event->len) {
-		        switch (event->mask) {
-		                case IN_CREATE:
-		                if (event->mask & IN_ISDIR) {
-		                        printf("The directory %s was created.\n", event->name);
-		                } else {
-		                        //log_message(LOG_FILE, "The file was created.\n");
-		                        //printf("The file %s was created.\n", event->name);
-					/* Jump to symbol decode code*/
-					sprintf(infile, "%s", event->name);
-					log_message(LOG_FILE, infile);
-					handle_file_creation(infile);
-					log_message(LOG_FILE, "After file handled.\n");
-		                }
-		                break;
-		                case IN_DELETE:
-		                //if (event->mask & IN_ISDIR)
-					//log_message("The directory %s was deleted.\n", event->name);
-				//else
-					//log_message("The file %s was deleted.\n", event->name);
-		                break;
-                                case IN_MODIFY:
-                                //if (event->mask & IN_ISDIR)
-					//log_message("The directory %s was modified.\n", event->name);
-				//else
-					//log_message("The file %s was modified.\n", event->name);
-		                break;
-		                default:
-		                log_message(LOG_FILE, "Event is not interesting to us.\n");
-		                //log_message("Event %s is not interesting to us.\n", event->name);
 
-		        }
-		}
-		i += EVENT_SIZE + event->len;
-	}
+	/* Watch the directory passed in as argument
+	   Read on for why you might want to alter this for
+	   more efficient inotify use in your app.
+	*/
+	watch_dir (inotify_fd, DMTX_SYMBOLDIR, ALL_MASK);
+	process_inotify_events (q, inotify_fd);
 
-	(void) inotify_rm_watch(fd, wd);
-	(void) close(fd);
 
-        log_message(LOG_FILE, "inotify close: OK");
-	/* FIXME: exit is not correct */
+
+	/* Finish up by destroying the queue, closing the fd
+           and returning a proper code
+        */
+	queue_destroy (q);
+	close_inotify_dev (inotify_fd);
 	return 0;
 }

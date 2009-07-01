@@ -31,6 +31,7 @@
 
 #include "utils.h"
 #include "inotify.h"
+#include "dmtxd.h"
 
 #define LOCK_FILE	"/tmp/dmtxdatadir/dmtxd.lock"
 
